@@ -1,9 +1,13 @@
+import 'package:ecommerce_app_huma_volve/features/home/cubit/home_cubit_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
-import '../widgets/product_card.dart';
+import '../models/product_model.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/product_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +18,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
+
+  @override
+  void initState() {
+    context.read<HomeCubitCubit>().loadHomeContent();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,43 +118,128 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    SizedBox(
-                      height: 44,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: dummyCategories.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          return CategoryChip(
-                            label: dummyCategories[index],
-                            isSelected: _selectedCategoryIndex == index,
-                            onTap: () {
-                              setState(() {
-                                _selectedCategoryIndex = index;
-                              });
-                            },
+                    BlocBuilder<HomeCubitCubit, HomeCubitState>(
+                      buildWhen: (previous, current) {
+                        if (current is GetProductsSuccess ||
+                            current is GetProductsFailure ||
+                            current is GetProductsLoading) {
+                          return false;
+                        }
+                        return true;
+                      },
+                      builder: (context, state) {
+                        if (state is GetCategoriesFailure) {
+                          return Center(child: Text(state.errorMessage));
+                        }
+                        if (state is GetCategoriesSuccess) {
+                          return SizedBox(
+                            height: 44,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: state.categories.length + 1,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(width: 12),
+                              itemBuilder: (context, index) {
+                                return CategoryChip(
+                                  label: index == 0
+                                      ? 'All'
+                                      : state.categories[index - 1].name ?? '',
+                                  isSelected: _selectedCategoryIndex == index,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedCategoryIndex = index;
+                                      BlocProvider.of<HomeCubitCubit>(
+                                        context,
+                                      ).getProducts(
+                                        id: index == 0
+                                            ? null
+                                            : state.categories[index - 1].id,
+                                      );
+                                    });
+                                  },
+                                );
+                              },
+                            ),
                           );
-                        },
-                      ),
+                        }
+                        return Skeletonizer(
+                          child: SizedBox(
+                            height: 44,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: dummyCategories.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(width: 12),
+                              itemBuilder: (context, index) {
+                                return CategoryChip(
+                                  label: dummyCategories[index],
+                                  isSelected: _selectedCategoryIndex == index,
+                                  onTap: () {},
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return ProductCard(product: dummyProducts[index]);
-                }, childCount: dummyProducts.length),
-              ),
+            BlocBuilder<HomeCubitCubit, HomeCubitState>(
+              builder: (context, state) {
+                if (state is GetProductsFailure) {
+                  return SliverToBoxAdapter(child: Text(state.errorMessage));
+                }
+
+                if (state is GetProductsSuccess) {
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.7,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return ProductCard(product: state.products[index]);
+                      }, childCount: state.products.length),
+                    ),
+                  );
+                }
+
+                return SliverToBoxAdapter(
+                  child: Skeletonizer(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.7,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                        itemCount: dummyProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = dummyProducts[index];
+                          return ProductCard(
+                            product: ProductModel(
+                              title: product.name,
+                              price: product.price.toInt(),
+                              images: [product.imageUrl],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
