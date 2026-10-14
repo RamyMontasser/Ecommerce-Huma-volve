@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../home/models/product_model.dart';
+import '../../home/data/models/product_model.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final ProductModel product;

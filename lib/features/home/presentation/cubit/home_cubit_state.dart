@@ -7,12 +7,14 @@ final class HomeCubitInitial extends HomeCubitState {}
 final class GetCategoriesSuccess extends HomeCubitState {
   final List<CategoryModel> categories;
 
-  new({required this.categories});
+  GetCategoriesSuccess({required this.categories});
+
+
 }
 final class GetCategoriesFailure extends HomeCubitState {
   final String errorMessage;
 
-  new({required this.errorMessage});
+  GetCategoriesFailure({required this.errorMessage});
 }
 final class GetCategoriesLoading extends HomeCubitState {}
 
@@ -20,11 +22,11 @@ final class GetCategoriesLoading extends HomeCubitState {}
 final class GetProductsSuccess extends HomeCubitState {
   final List<ProductModel> products;
 
-  new({required this.products});
+  GetProductsSuccess({required this.products});
 }
 final class GetProductsFailure extends HomeCubitState {
     final String errorMessage;
 
-  new({required this.errorMessage});
+  GetProductsFailure({required this.errorMessage});
 }
 final class GetProductsLoading extends HomeCubitState {}

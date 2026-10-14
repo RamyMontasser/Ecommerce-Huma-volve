@@ -1,9 +1,10 @@
+import 'package:ecommerce_app_huma_volve/core/services/secure_storage.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
 import '../widgets/profile_menu_item.dart';
-import '../../auth/login/screens/login_screen.dart';
+import '../../auth/presentation/screens/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -90,7 +91,9 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.logout,
                     title: 'Logout',
                     isDestructive: true,
-                    onTap: () {
+                    onTap: () async {
+                      await SecureStorage.deleteTokens();
+                      if (!context.mounted) return;
                       Navigator.pushReplacement(
                         context,
                         PageRouteBuilder(

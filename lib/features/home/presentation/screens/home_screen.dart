@@ -1,11 +1,11 @@
-import 'package:ecommerce_app_huma_volve/features/home/cubit/home_cubit_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/cubit/home_cubit_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
-import '../models/product_model.dart';
+import '../../../../core/dummy_data.dart';
+import '../../../../core/theme.dart';
+import '../../data/models/product_model.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/product_card.dart';
 
