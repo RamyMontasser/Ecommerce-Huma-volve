@@ -31,13 +31,14 @@ class HomeRepoImp implements HomeRepo {
   }
 
   @override
-  Future<Either<Failure, List<ProductModel>>> getProducts({int? id}) async {
+  Future<Either<Failure, List<ProductModel>>> getProducts({int? id,required int limit,
+    required int offset,}) async {
     try {
      final response = await apiClient.dio.get(
         id == null
             ? 'products'
             : '${ApiConstants.getCategoriesEndpoint}/$id/products',
-        queryParameters: {'limit': 100, 'offset': 0},
+        queryParameters: {"limit": limit, "offset": offset},
       );
       final data = response.data as List;
       List<ProductModel> products = data

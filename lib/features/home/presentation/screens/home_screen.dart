@@ -18,11 +18,35 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
+  late final ScrollController scrollController;
 
   @override
   void initState() {
-    context.read<HomeCubitCubit>().loadHomeContent();
+    scrollController = ScrollController();
+    scrollController.addListener(_onListen);
+
     super.initState();
+    context.read<HomeCubitCubit>().loadHomeContent();
+  }
+
+  void _onListen() {
+    if (!scrollController.hasClients) return;
+
+    final pixels = scrollController.position.pixels;
+    final max = scrollController.position.maxScrollExtent;
+    final int triggerDistance = 200;
+
+    if (pixels >= max - triggerDistance) {
+      context.read<HomeCubitCubit>().loadMoreProducts();
+    }
+  }
+
+  @override
+  void dispose() {
+    scrollController
+      ..removeListener(_onListen)
+      ..dispose();
+    super.dispose();
   }
 
   @override
@@ -31,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -193,20 +218,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 if (state is GetProductsSuccess) {
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.7,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                  return SliverMainAxisGroup(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.7,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            return ProductCard(product: state.products[index]);
+                          }, childCount: state.products.length),
+                        ),
+                      ),
+                      if (state.isLoadingMore || state.loadMoreError != null)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Center(
+                              child: state.isLoadingMore
+                                  ? const CircularProgressIndicator()
+                                  : TextButton.icon(
+                                      onPressed: () => context
+                                          .read<HomeCubitCubit>()
+                                          .loadMoreProducts(),
+                                      icon: const Icon(Icons.refresh),
+                                      label: Text(
+                                        'Could not load more products. Retry',
+                                      ),
+                                    ),
+                            ),
                           ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return ProductCard(product: state.products[index]);
-                      }, childCount: state.products.length),
-                    ),
+                        ),
+                    ],
                   );
                 }
 

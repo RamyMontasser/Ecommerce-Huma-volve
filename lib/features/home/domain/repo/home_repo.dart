@@ -5,5 +5,9 @@ import 'package:ecommerce_app_huma_volve/features/home/data/models/product_model
 
 abstract class HomeRepo {
   Future<Either<Failure, List<CategoryModel>>> getCategories();
-  Future<Either<Failure, List<ProductModel>>> getProducts({int? id});
+  Future<Either<Failure, List<ProductModel>>> getProducts({
+    int? id,
+    required int limit,
+    required int offset,
+  });
 }
